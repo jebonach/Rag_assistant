@@ -1,0 +1,28 @@
+# Python
+pycache/
+*.pyc
+*.pyo
+*.pyd
+
+# Environments
+.venv/
+venv/
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data / indexes / artifacts (keep placeholders)
+data/*
+!data/.gitkeep
+
+indexes/*
+!indexes/.gitkeep
+
+artifacts/*
+!artifacts/.gitkeep
+
+# OS / IDE
+.DS_Store
+.vscode/
+.idea/
