@@ -1,67 +1,54 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import List, Dict, Any
+import regex as re
+
+_PAGE_MARK_RE = re.compile(r"\[\s*(\d+)\s*\]\s*$")
 
 
-@dataclass(frozen=True)
-class Chunk:
-    chunk_id: str
-    page: int
-    start: int
-    end: int
-    text: str
+def extract_page_number(text: str) -> int | None:
+    """
+    Extracts trailing page marker [ N ] from the end of text.
+    Returns N if found else None.
+    """
+    t = (text or "").strip()
+    m = _PAGE_MARK_RE.search(t)
+    if not m:
+        return None
+    return int(m.group(1))
 
 
-def chunk_text(
-    text: str,
-    page: int,
-    chunk_size: int,
-    chunk_overlap: int,
-    prefix: str,
-) -> List[Chunk]:
-    if chunk_size <= 0:
-        raise ValueError("chunk_size must be > 0")
-    if chunk_overlap < 0 or chunk_overlap >= chunk_size:
-        raise ValueError("chunk_overlap must be in [0, chunk_size)")
-
-    chunks: List[Chunk] = []
-    n = len(text)
-    start = 0
-    idx = 0
-
-    while start < n:
-        end = min(start + chunk_size, n)
-        chunk_txt = text[start:end].strip()
-        if chunk_txt:
-            chunk_id = f"{prefix}_p{page}_c{idx}"
-            chunks.append(Chunk(chunk_id=chunk_id, page=page, start=start, end=end, text=chunk_txt))
-            idx += 1
-        if end == n:
-            break
-        start = end - chunk_overlap
-
-    return chunks
+def validate_page_marker(page: int, text: str) -> None:
+    n = extract_page_number(text)
+    if n is None:
+        raise ValueError(f"Page {page}: missing trailing marker '[ N ]'.")
+    if n != page:
+        raise ValueError(f"Page {page}: marker mismatch, got [ {n} ] at end.")
 
 
-def pages_to_chunks(
+def pages_to_page_chunks(
     pages: List[Dict[str, Any]],
-    chunk_size: int,
-    chunk_overlap: int,
     prefix: str = "book",
+    strict: bool = True,
 ) -> List[Dict[str, Any]]:
+    """
+    Strict chunking: each page becomes exactly one chunk.
+    Requires that text ends with marker [ page ] if strict=True.
+    """
     out: List[Dict[str, Any]] = []
     for row in pages:
         page = int(row["page"])
-        text = str(row["text"] or "")
-        for ch in chunk_text(text, page, chunk_size, chunk_overlap, prefix):
-            out.append(
-                {
-                    "chunk_id": ch.chunk_id,
-                    "page": ch.page,
-                    "start": ch.start,
-                    "end": ch.end,
-                    "text": ch.text,
-                }
-            )
+        text = str(row.get("text") or "")
+        if strict:
+            validate_page_marker(page, text)
+
+        out.append(
+            {
+                "chunk_id": f"{prefix}_p{page}",
+                "page": page,
+                "start": 0,
+                "end": len(text),
+                "text": text,
+            }
+        )
     return out
