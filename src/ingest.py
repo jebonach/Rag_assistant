@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Dict, Any, Optional
+from src.chunking import validate_page_marker
 
 import regex as re
 
@@ -62,6 +63,11 @@ def read_txt_pages(txt_path: Path, encoding: str = "utf-8") -> List[PageDoc]:
     tail = normalize_text("\n".join(buf))
     if tail:
         pages.append(PageDoc(page=-1, text=tail))
+
+    for p in pages:
+        if p.page <= 0:
+            raise ValueError(f"Invalid page number: {p.page}")
+        validate_page_marker(p.page, p.text)
 
     validate_pages(pages)
     return pages
