@@ -1,0 +1,12 @@
+[
+  { "id": "q1", "query": "Вопрос 1", "gold_page": 10 },
+  { "id": "q2", "query": "Вопрос 2", "gold_page": 25 },
+  { "id": "q3", "query": "Вопрос 3", "gold_page": 100 },
+  { "id": "q4", "query": "Вопрос 4", "gold_page": 220 },
+  { "id": "q5", "query": "Вопрос 5", "gold_page": 350 },
+  { "id": "q6", "query": "Вопрос 6", "gold_page": 10 },
+  { "id": "q7", "query": "Вопрос 7", "gold_page": 25 },
+  { "id": "q8", "query": "Вопрос 8", "gold_page": 100 },
+  { "id": "q9", "query": "Вопрос 9", "gold_page": 220 },
+  { "id": "q10", "query": "Вопрос 10", "gold_page": 350 }
+]
