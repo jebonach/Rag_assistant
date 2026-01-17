@@ -11,7 +11,7 @@ from src.retrievers.vector_numpy import VectorIndex, embed_query
 from src.embeddings import EmbeddingConfig
 
 
-Mode = Literal["bm25", "fulltext", "vector", "hybrid"]
+Mode = Literal["bm25", "vector", "hybrid"]
 
 
 def format_hit(hit: Dict[str, Any], score_key: str = "score") -> Dict[str, Any]:
@@ -33,7 +33,7 @@ def retrieve(
     vector_top_k: Optional[int] = None,
     rrf_k: int = 60,
 ) -> List[Dict[str, Any]]:
-    if mode in ("bm25", "fulltext"):
+    if mode == "bm25":
         hits = bm25.search(query, k=top_k)
         return [format_hit(h) for h in hits]
 
@@ -67,7 +67,7 @@ def build_context(hits: List[Dict[str, Any]], max_chars: int = 6000) -> str:
     parts = []
     total = 0
     for h in hits:
-        block = f"---\nPAGE {h['page']} | {h['chunk_id']}\n{h['text']}\n"
+        block = f"---\nстр. {h['page']} | {h['chunk_id']}\n{h['text']}\n"
         if total + len(block) > max_chars:
             break
         parts.append(block)
