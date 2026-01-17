@@ -4,8 +4,10 @@ from dataclasses import dataclass
 from pathlib import Path
 import re
 
+from src.chunking import validate_page_marker
 
-PAGE_RE = re.compile(r"\[\s*(\d{1,4})\s*\]\s*$", re.MULTILINE)
+
+PAGE_RE = re.compile(r"\[\s*(\d+)\s*\]\s*$", re.MULTILINE)
 
 
 @dataclass(frozen=True)
@@ -25,27 +27,32 @@ def split_text_by_page_markers(text: str) -> list[tuple[int, str]]:
     """
     matches = list(PAGE_RE.finditer(text))
     if not matches:
-        raise ValueError("Не найдены маркеры страниц вида [ XXX ]. Проверь исходный TXT.")
+        raise ValueError("Не найдены маркеры страниц вида [ N ]. Проверь исходный TXT/MD.")
 
     pages: list[tuple[int, str]] = []
+    seen = set()
     start = 0
     for m in matches:
         page_no = int(m.group(1))
         end = m.end()
         page_text = text[start:end].strip()
-        if page_text:
-            pages.append((page_no, page_text))
+        if not page_text:
+            raise ValueError(f"Пустая страница: [ {page_no} ].")
+        if page_no in seen:
+            raise ValueError(f"Найдены дубликаты номера страницы: {page_no}.")
+        validate_page_marker(page_no, page_text)
+        pages.append((page_no, page_text))
+        seen.add(page_no)
         start = end
 
-    tail = text[start:].strip()
-    if tail and pages:
-        last_no, last_text = pages[-1]
-        pages[-1] = (last_no, (last_text + "\n" + tail).strip())
+    tail = text[start:]
+    if tail.strip():
+        raise ValueError(
+            "TXT/MD parsing: найден хвост без маркера страницы. "
+            "Файл должен заканчиваться строкой вида '[ N ]'."
+        )
 
-    dedup: dict[int, str] = {}
-    for no, t in pages:
-        dedup[no] = t
-    return sorted(dedup.items(), key=lambda x: x[0])
+    return pages
 
 
 def write_pages(pages: list[tuple[int, str]], out_dir: Path) -> None:
@@ -68,6 +75,7 @@ def load_page_chunks(book_id: str, pages_dir: str | Path) -> list[PageChunk]:
         except ValueError as exc:
             raise ValueError(f"Некорректное имя файла страницы: {fp.name}") from exc
         text = fp.read_text(encoding="utf-8", errors="ignore").strip()
+        validate_page_marker(page, text)
         chunk_id = f"{book_id}:p{page:04d}"
         chunks.append(
             PageChunk(
