@@ -11,7 +11,7 @@ from src.retrievers.vector_numpy import VectorIndex, embed_query
 from src.embeddings import EmbeddingConfig
 
 
-Mode = Literal["bm25", "vector", "hybrid"]
+Mode = Literal["bm25", "fulltext", "vector", "hybrid"]
 
 
 def format_hit(hit: Dict[str, Any], score_key: str = "score") -> Dict[str, Any]:
@@ -33,7 +33,7 @@ def retrieve(
     vector_top_k: Optional[int] = None,
     rrf_k: int = 60,
 ) -> List[Dict[str, Any]]:
-    if mode == "bm25":
+    if mode in ("bm25", "fulltext"):
         hits = bm25.search(query, k=top_k)
         return [format_hit(h) for h in hits]
 
