@@ -2,11 +2,16 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from src.chunking_pages import split_text_by_page_markers, write_pages
-
 
 def main() -> None:
     import argparse
+    import sys
+
+    project_root = Path(__file__).resolve().parents[1]
+    if str(project_root) not in sys.path:
+        sys.path.insert(0, str(project_root))
+
+    from src.chunking_pages import split_text_by_page_markers, write_pages
 
     ap = argparse.ArgumentParser()
     ap.add_argument("--in", dest="in_path", required=True, help="Путь к исходному TXT/MD (как текст).")

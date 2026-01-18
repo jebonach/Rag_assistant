@@ -11,6 +11,12 @@ python -m venv .venv
 pip install -r requirements.txt
 cp .env.example .env
 
+# Qdrant (vector store)
+docker compose up -d qdrant
+```
+
+Qdrant will be available at `http://localhost:6333`.
+
 ## Data format (page-based)
 Textbooks are stored as page files:
 `data/books/<book_id>/pages/page_0001.txt`, `page_0002.txt`, ...

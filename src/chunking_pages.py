@@ -19,15 +19,23 @@ class PageChunk:
     path: str
 
 
-def split_text_by_page_markers(text: str) -> list[tuple[int, str]]:
-    """
-    Split text by page markers like: [ 208 ]
-    The marker is treated as the end of the page.
-    Returns (page_no, page_text_with_marker).
-    """
-    matches = list(PAGE_RE.finditer(text))
+import re
+
+PAGE_LINE_RE = re.compile(r"^\[\s*(\d+)\s*\]\s*$", re.MULTILINE)
+
+def split_text_by_page_markers(text: str):
+    # 1) Находим последний маркер страницы
+    matches = list(PAGE_LINE_RE.finditer(text))
     if not matches:
-        raise ValueError("Не найдены маркеры страниц вида [ N ]. Проверь исходный TXT/MD.")
+        raise ValueError("Не найдено ни одного маркера страницы вида '[ N ]'.")
+
+    last = matches[-1]
+    tail = text[last.end():]
+    if tail.strip():
+        print(f"[WARN] Dropping tail after last page marker: {len(tail)} chars")
+
+    text = text[:last.end()]
+
 
     pages: list[tuple[int, str]] = []
     seen = set()
