@@ -88,6 +88,8 @@ def load_qdrant_meta(path: Path) -> Dict[str, Any]:
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
+def make_point_id(page: int, sub_id: int) -> int:
+    return int(page) * 1_000_000 + int(sub_id)
 
 def build_qdrant_index(
     client: QdrantClient,
@@ -146,7 +148,11 @@ def build_qdrant_index(
                 "end": int(ch["end"]),
             }
             point_id = f"{page}:{sub_id}"
-            points.append(PointStruct(id=point_id, vector=vec.tolist(), payload=payload))
+            points.append(PointStruct(
+            id=make_point_id(page, sub_id),
+            vector=vec.tolist(),
+            payload={"page": page, "sub_id": sub_id},
+            ))
 
         store.upsert_points(points)
         subchunk_count += len(batch_items)
